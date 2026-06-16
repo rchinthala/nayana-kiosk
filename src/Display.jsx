@@ -13,7 +13,7 @@ function driveFolderUrl(folderId) {
 }
 
 const fallbackData = {
-  announcements: [{ id: 1, text: "Welcome to Nayana Eyebrows!", active: true }],
+  announcements: [{ id: 1, text: "Welcome to Nayana Kiosk!", active: true }],
   slides: [],
   schedule: [],
   media: [],
@@ -22,8 +22,8 @@ const fallbackData = {
     announcementDuration: 6,
     showClock: true,
     accentColor: "#6C63FF",
-    orgName: "Anas Eyebrows",
-    slideFolderId: "1NwJtsVN3rogOdHnyU0KFqDzPMCKUhQ8a",
+    orgName: "My Organization",
+    slideFolderId: "",
   },
 };
 
@@ -61,30 +61,39 @@ function useKioskData() {
   const load = useCallback(async () => {
     try {
       const res = await fetch(driveUrl(CONTENT_FILE_ID) + `&t=${Date.now()}`);
-      if (!res.ok) { setData(fallbackData); return; }
+      if (!res.ok) {
+        // Transient failure (rate limit, network blip) — keep showing last good data
+        setData(prev => prev || fallbackData);
+        return;
+      }
       const json = await res.json();
 
-      // If a folder ID is set, fetch images from it and merge with manual slides
+      // If a folder ID is set, fetch images from it and merge with manual slides.
+      // Wrapped so a folder-fetch failure never wipes the rest of the content.
       const folderId = json.settings?.slideFolderId;
       if (folderId) {
-        const folderSlides = await fetchFolderSlides(folderId);
-        const manualSlides = (json.slides || []).filter(s => s.active);
-        json.slides = [...manualSlides, ...folderSlides];
+        try {
+          const folderSlides = await fetchFolderSlides(folderId);
+          const manualSlides = (json.slides || []).filter(s => s.active);
+          json.slides = [...manualSlides, ...folderSlides];
+        } catch {
+          // Folder fetch failed — keep manual slides only, don't break the rest
+          json.slides = (json.slides || []).filter(s => s.active);
+        }
       }
 
       setData(json);
     } catch {
-      setData(fallbackData);
+      // Network/parse error — keep showing last good data instead of blanking out
+      setData(prev => prev || fallbackData);
     }
   }, []);
 
   useEffect(() => {
-    load();
-    const interval = setInterval(load, 10000);
-    return () => clearInterval(interval);
+    load(); // fetch once on launch — no recurring poll, to keep Drive API calls minimal
   }, [load]);
 
-  return data;
+  return { data, refresh: load };
 }
 
 function Ticker({ announcements, duration, color }) {
@@ -242,12 +251,28 @@ function MediaPlayer({ media, muted }) {
 }
 
 export default function KioskDisplay() {
-  const data = useKioskData();
+  const { data, refresh } = useKioskData();
   const time = useClock();
   const [view, setView]           = useState("slides");
   const [muted, setMuted]         = useState(true);
   const [showAudioHint, setShowAudioHint] = useState(false);
+  const [showRefreshHint, setShowRefreshHint] = useState(false);
   const viewTimer = useRef(null);
+
+  // Manual refresh — press "R" on a keyboard, or the Back/Info button on most
+  // remotes maps to Escape/Backspace in the browser. Tap anywhere also works
+  // as a fallback via the on-screen button in the corner.
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "r" || e.key === "R" || e.key === "Backspace" || e.key === "Escape") {
+        refresh();
+        setShowRefreshHint(true);
+        setTimeout(() => setShowRefreshHint(false), 1800);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [refresh]);
 
   useEffect(() => {
     if (!data) return;
@@ -304,6 +329,13 @@ export default function KioskDisplay() {
         >
           {muted ? "🔇" : "🔊"}
         </button>
+        <button
+          onClick={() => { refresh(); setShowRefreshHint(true); setTimeout(() => setShowRefreshHint(false), 1800); }}
+          title="Refresh content from Drive"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", cursor: "pointer", width: 44, height: 44, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background 0.2s" }}
+        >
+          🔄
+        </button>
       </div>
 
       {/* Main body */}
@@ -331,6 +363,12 @@ export default function KioskDisplay() {
       {showAudioHint && (
         <div style={{ position: "fixed", top: 80, right: 24, zIndex: 9999, background: "rgba(0,0,0,0.85)", border: `1px solid ${accentColor}`, borderRadius: 10, padding: "10px 18px", color: "#fff", fontSize: 15, fontWeight: 600, animation: "fadeIn 0.2s ease", display: "flex", alignItems: "center", gap: 8 }}>
           {muted ? "🔇 Audio muted" : "🔊 Audio on"}
+        </div>
+      )}
+
+      {showRefreshHint && (
+        <div style={{ position: "fixed", top: 80, right: 24, zIndex: 9999, background: "rgba(0,0,0,0.85)", border: `1px solid ${accentColor}`, borderRadius: 10, padding: "10px 18px", color: "#fff", fontSize: 15, fontWeight: 600, animation: "fadeIn 0.2s ease", display: "flex", alignItems: "center", gap: 8 }}>
+          🔄 Refreshing content…
         </div>
       )}
 
