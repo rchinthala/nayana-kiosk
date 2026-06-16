@@ -12,6 +12,10 @@ function driveFolderUrl(folderId) {
   return `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType+contains+'image/'+and+trashed=false&fields=files(id,name)&key=${API_KEY}`;
 }
 
+function driveThumbnailUrl(fileId) {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w256`;
+}
+
 const fallbackData = {
   announcements: [{ id: 1, text: "Welcome to Nayana Kiosk!", active: true }],
   slides: [],
@@ -166,12 +170,12 @@ function SlideShow({ slides, duration, color, hasSchedule }) {
   const slide = active[idx % active.length];
 
   return (
-    <div style={{ position: "relative", flex: 1, overflow: "hidden" }}>
+    <div style={{ position: "relative", flex: 1, overflow: "hidden", background: "#000" }}>
       <img
         key={slide.id}
         src={slide.url}
         alt={slide.caption}
-        style={{ width: "100%", height: "100%", objectFit: "cover", animation: "fadeIn 0.8s ease" }}
+        style={{ width: "100%", height: "100%", objectFit: "contain", animation: "fadeIn 0.8s ease" }}
       />
       {slide.caption && (
         <div style={{
@@ -292,7 +296,7 @@ export default function KioskDisplay() {
   );
 
   const { settings, announcements, slides, schedule, media } = data;
-  const { accentColor, showClock, orgName, slideDuration, announcementDuration } = settings;
+  const { accentColor, showClock, orgName, slideDuration, announcementDuration, logoFileId } = settings;
   const hasSchedule    = schedule.some(s => s.active);
   const hasActiveMedia = media.some(m => m.active);
   const hasActiveSlides = slides.some(s => s.active);
@@ -310,7 +314,11 @@ export default function KioskDisplay() {
       {/* Top bar */}
       <div style={{ height: 68, background: "rgba(0,0,0,0.9)", borderBottom: `3px solid ${accentColor}`, display: "flex", alignItems: "center", padding: "0 36px", gap: 20, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
-          <div style={{ width: 36, height: 36, background: accentColor, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📺</div>
+          <div style={{ width: 36, height: 36, background: logoFileId ? "transparent" : accentColor, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, overflow: "hidden" }}>
+            {logoFileId
+              ? <img src={driveThumbnailUrl(logoFileId)} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              : "📺"}
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 20, lineHeight: 1 }}>{orgName}</div>
             <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>Information Display</div>
