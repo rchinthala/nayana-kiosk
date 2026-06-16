@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 
 // ─── CONFIG — fill these in after Drive setup ─────────────────────────────────
-const CONTENT_FILE_ID = "YOUR_CONTENT_FILE_ID";  // kiosk-content.json (public viewer)
-const AUTH_FILE_ID    = "YOUR_AUTH_FILE_ID";      // kiosk-auth.json (private, viewer)
-const API_KEY         = "YOUR_GOOGLE_API_KEY";    // Google Cloud API key (Drive read)
+const CONTENT_FILE_ID = "1CDdoa0Pz9dWsZmBouTYFkR7G5zMFZam5";  // kiosk-content.json (public viewer)
+const AUTH_FILE_ID    = "1LWkLPOuJp-4N3XgOGLcG5i0DopJg7trk";      // kiosk-auth.json (private, viewer)
+const API_KEY         = "AIzaSyDo3TJ5jaeCg8wa-Muyv8upNXN3M2yZkRY";    // Google Cloud API key (Drive read)
 
 function driveUrl(fileId) {
   return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
