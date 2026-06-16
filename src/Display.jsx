@@ -13,7 +13,7 @@ function driveFolderUrl(folderId) {
 }
 
 const fallbackData = {
-  announcements: [{ id: 1, text: "Welcome to Nayana Kiosk!", active: true }],
+  announcements: [{ id: 1, text: "Welcome to Nayana Eyebrows!", active: true }],
   slides: [],
   schedule: [],
   media: [],
@@ -22,8 +22,8 @@ const fallbackData = {
     announcementDuration: 6,
     showClock: true,
     accentColor: "#6C63FF",
-    orgName: "My Organization",
-    slideFolderId: "",
+    orgName: "Anas Eyebrows",
+    slideFolderId: "1NwJtsVN3rogOdHnyU0KFqDzPMCKUhQ8a",
   },
 };
 
