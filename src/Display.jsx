@@ -1,9 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
-const STORAGE_KEY = "nayana-kiosk-content";
+// ─── CONFIG — must match Admin.jsx ───────────────────────────────────────────
+const CONTENT_FILE_ID = "1CDdoa0Pz9dWsZmBouTYFkR7G5zMFZam5";
+const API_KEY         = "AIzaSyDo3TJ5jaeCg8wa-Muyv8upNXN3M2yZkRY";
+
+function driveUrl(fileId) {
+  return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
+}
 
 const fallbackData = {
-  announcements: [{ id: 1, text: "Welcome! Connect the Admin Panel to manage this display.", active: true }],
+  announcements: [{ id: 1, text: "Welcome to Nayana Kiosk!", active: true }],
   slides: [],
   schedule: [],
   media: [],
@@ -30,8 +36,9 @@ function useKioskData() {
 
   const load = useCallback(async () => {
     try {
-      const result = await window.storage.get(STORAGE_KEY, true);
-      setData(result ? JSON.parse(result.value) : fallbackData);
+      const res = await fetch(driveUrl(CONTENT_FILE_ID) + `&t=${Date.now()}`);
+      if (res.ok) setData(await res.json());
+      else setData(fallbackData);
     } catch {
       setData(fallbackData);
     }
@@ -39,12 +46,13 @@ function useKioskData() {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 8000); // poll every 8s for live updates
+    const interval = setInterval(load, 10000); // poll every 10s for live updates
     return () => clearInterval(interval);
   }, [load]);
 
   return data;
 }
+
 
 function Ticker({ announcements, duration, color }) {
   const [idx, setIdx] = useState(0);
