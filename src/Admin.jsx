@@ -32,7 +32,7 @@ const defaultContent = {
     { id: 3, time: "2:00 PM", event: "Training Session", room: "Conf A", active: true },
   ],
   media: [{ id: 1, type: "youtube", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", title: "Company Intro", active: false }],
-  settings: { slideDuration: 5, announcementDuration: 6, showClock: true, accentColor: "#6C63FF", orgName: "My Organization" },
+  settings: { slideDuration: 5, announcementDuration: 6, showClock: true, accentColor: "#6C63FF", orgName: "My Organization", slideFolderId: "" },
 };
 
 // ─── COLORS ───────────────────────────────────────────────────────────────────
@@ -339,6 +339,23 @@ function Settings({ data, onSave }) {
         </div>
         <div><label style={lbl}>Slide duration — {s.slideDuration}s</label><input type="range" min={3} max={30} value={s.slideDuration} onChange={e => upd("slideDuration", +e.target.value)} style={{ width: "100%" }} /></div>
         <div><label style={lbl}>Announcement duration — {s.announcementDuration}s</label><input type="range" min={3} max={20} value={s.announcementDuration} onChange={e => upd("announcementDuration", +e.target.value)} style={{ width: "100%" }} /></div>
+        <div>
+          <label style={lbl}>
+            🖼️ Drive slide folder ID
+            <span style={{ fontWeight: 400, color: C.dim, marginLeft: 6 }}>(optional)</span>
+          </label>
+          <input
+            value={s.slideFolderId || ""}
+            onChange={e => upd("slideFolderId", e.target.value)}
+            placeholder="Paste folder ID from Drive URL…"
+            style={input}
+          />
+          <div style={{ fontSize: 12, color: C.dim, marginTop: 8, lineHeight: 1.6 }}>
+            Upload images to a shared Drive folder and they appear in the slideshow automatically.
+            Get the ID from the folder URL:<br />
+            <code style={{ color: C.accent }}>drive.google.com/drive/folders/<strong>FOLDER_ID_HERE</strong></code>
+          </div>
+        </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <label style={{ ...lbl, marginBottom: 0 }}>Show clock on display</label>
           <Toggle value={s.showClock} onChange={v => upd("showClock", v)} />
